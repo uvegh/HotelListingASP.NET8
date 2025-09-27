@@ -1,7 +1,9 @@
-﻿using HotelListing.Data;
-using Microsoft.AspNetCore.Http.HttpResults;
+﻿using AutoMapper;
+using HotelListing.Data;
+using HotelListing.Models.Country;
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 
@@ -12,45 +14,68 @@ namespace HotelListing.Controllers
     public class CountriesController : ControllerBase
     {
         private readonly HotelDBContext _context;
+        private readonly ILogger<CountriesController> _logger;
+        private readonly IMapper _mapper;
         public record CreateCountryDto(string Name, string ShortName);
 
-        public CountriesController(HotelDBContext context)
+        public CountriesController(HotelDBContext context,ILogger<CountriesController> logger, IMapper mapper)
         {
             _context = context;
+            _logger = logger;
+            _mapper = mapper;
+
 
         }
 
         [HttpGet]
 
-        public async Task<ActionResult<IEnumerable<Country>>> GetCountries()
+        public async Task<ActionResult<IEnumerable<GetCountryDto>>> GetCountries(CancellationToken ct)
         {
-            var countries = await _context.Countries.ToListAsync();
-            if (countries != null) {
-                return Ok(countries);
+            var countries = await _context.Countries.ToListAsync(ct);
+            
+                var cont = _mapper.Map<List<GetCountryDto>>(countries);
+                _logger.LogInformation("Get all countries {@cont}", cont);
+            
+            
+            if (cont != null) {
+
+                return Ok(cont);
             }
             return NotFound();
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Country>> GetCountry([FromRoute(Name = "id")] int Id)
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<CountryDto>> GetCountry([FromRoute(Name = "id")] int Id)
         {
-            var country = await _context.Countries.FindAsync(Id);
-            if (country == null)
+
+            var country = await _context.Countries.Include(res => res.Hotels).FirstOrDefaultAsync(res => res.Id == Id);
+                if (country == null)
             {
                 return NotFound();
             }
-            return country;
+           var cont = _mapper.Map<CountryDto>(country);
+            return Ok(cont);
+           
 
         }
 
 
 
         [HttpPost]
-        public async Task<ActionResult<Country>> PostCountry(Country country)
+        public async Task<ActionResult<Country>> PostCountry(CreateCountryDto CreateCountry)
         {
-            _context.Countries.Add(country);
+            
+            //create obj and map createCOuntry to country datatype
+
+            var newObj = _mapper.Map<Country>(CreateCountry);
+            Console.WriteLine(newObj);
+            _logger.LogInformation("Creating a new country {@NewCountry}", newObj);
+            
+
+            _context.Countries.Add(newObj);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetCountry), new { id = country.Id }, country);
+            _logger.LogInformation("Creating a country {@newObj}", newObj.Id);
+            return CreatedAtAction(nameof(GetCountry), new { id = newObj.Id }, newObj);
 
 
         }
@@ -109,38 +134,46 @@ namespace HotelListing.Controllers
         //}
 
         [HttpPut("{id}") ]
-
-        public  async Task<ActionResult <Country >> UpdateCountry( int id, Country obj, CancellationToken ct)
+        public async Task<ActionResult<Country>> UpdateCountry(int id, UpdateCountryDto obj, CancellationToken ct)
         {
             if (id != obj.Id) return BadRequest("invalid Id");
 
             //change state to modified to prevent creating a new entity and just update the existing one
             //
             //var foundObj = await _context.Countries.FindAsync(id,ct);
-            _context.Entry(obj).State = EntityState.Modified;
-            try {
+            //_context.Entry(obj).State = EntityState.Modified;
+            //when you get the entity from the db context it is already being tracked so you dont need to set the state to modified
+            var UpdateCountryDto = await _context.Countries.FindAsync(id, ct);
+            if (UpdateCountryDto is null) return NotFound("Does not exist");
+            _mapper.Map(obj, UpdateCountryDto);
+            try
+            {
                 await _context.SaveChangesAsync(ct);
-                }
+                return Ok("Updated");
+            }
             catch (DBConcurrencyException)
             {
-                if (!await _context.Countries.AnyAsync(res => res.Id == id))
+               if(! await ContExist(id))
                 {
-
-                    return NotFound();
+                    return NotFound("Does not exist");
                 }
+
                 else { throw; }
                 
             }
-            return Ok("Updated");
+            
             
         }
 
+        private Task<bool> ContExist(int id) => _context.Countries.AnyAsync(cont => cont.Id == id);
 
-        private bool ContExist(int id)
-        {
-            return (_context.Countries.Any(obj => obj.Id == id));
+        //private bool ContExist(int id)
+        //{
+        //    return (_context.Countries.Any(obj => obj.Id == id));
 
-        }
+        //}
+
+
     }
 
     
