@@ -13,7 +13,7 @@ namespace HotelListing.Data
 
         [ForeignKey(nameof (CountryId))]
         public int CountryId { get; set; }
-        public Country Country { get; set; }
+        public Country Country { get; set; } = null!;
 
         [MaxLength(9,ErrorMessage ="Post code cannot be more than 9 characters")]
         public string? PostCode { get; set; }
