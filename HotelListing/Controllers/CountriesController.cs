@@ -134,7 +134,7 @@ namespace HotelListing.Controllers
         //}
 
         [HttpPut("{id}") ]
-        public async Task<ActionResult<Country>> UpdateCountry(int id, UpdateCountryDto obj, CancellationToken ct)
+        public async Task<ActionResult<Country>> UpdateCountry(int id, [FromBody] UpdateCountryDto obj, CancellationToken ct)
         {
             if (id != obj.Id) return BadRequest("invalid Id");
 
@@ -149,23 +149,22 @@ namespace HotelListing.Controllers
             try
             {
                 await _context.SaveChangesAsync(ct);
-                return Ok("Updated");
+                
+                return Ok(UpdateCountryDto);
             }
             catch (DBConcurrencyException)
             {
-               if(! await ContExist(id))
-                {
-                    return NotFound("Does not exist");
-                }
 
-                else { throw; }
+              return  await ContExist(id, ct) ? StatusCode(StatusCodes.Status409Conflict) : NotFound();
+
+               
                 
             }
             
             
         }
 
-        private Task<bool> ContExist(int id) => _context.Countries.AnyAsync(cont => cont.Id == id);
+        private Task<bool> ContExist(int id,CancellationToken? ct=null) => _context.Countries.AnyAsync(cont => cont.Id == id,ct?? CancellationToken.None);
 
         //private bool ContExist(int id)
         //{
