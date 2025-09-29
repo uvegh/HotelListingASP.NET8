@@ -3,7 +3,7 @@
 namespace HotelListing.Models.Country
 {
 
-    public sealed class CreateCountryDto:BaseCountryDto
+    public  class CreateCountryDto:BaseCountryDto
     {
 
       

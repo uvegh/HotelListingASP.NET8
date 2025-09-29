@@ -1,7 +1,8 @@
 ﻿using AutoMapper;
+using HotelListing.Contracts;
 using HotelListing.Data;
 using HotelListing.Models.Country;
-
+using HotelListing.Repository;
 using Microsoft.AspNetCore.Mvc;
 
 using Microsoft.EntityFrameworkCore;
@@ -13,17 +14,18 @@ namespace HotelListing.Controllers
     [Route("hotelApi/[controller]")]
     public class CountriesController : ControllerBase
     {
-        private readonly HotelDBContext _context;
+        //private readonly HotelDBContext _context;
         private readonly ILogger<CountriesController> _logger;
         private readonly IMapper _mapper;
-        public record CreateCountryDto(string Name, string ShortName);
+        private readonly ICountryRepository _countryRepo;
+        
 
-        public CountriesController(HotelDBContext context,ILogger<CountriesController> logger, IMapper mapper)
+        public CountriesController(HotelDBContext context,ILogger<CountriesController> logger, IMapper mapper, ICountryRepository countryRepository)
         {
-            _context = context;
+            //_context = context;
             _logger = logger;
             _mapper = mapper;
-
+            _countryRepo = countryRepository;
 
         }
 
@@ -31,7 +33,7 @@ namespace HotelListing.Controllers
 
         public async Task<ActionResult<IEnumerable<GetCountryDto>>> GetCountries(CancellationToken ct)
         {
-            var countries = await _context.Countries.ToListAsync(ct);
+            var countries = await _countryRepo.GetAllAsync();
             
                 var cont = _mapper.Map<List<GetCountryDto>>(countries);
                 _logger.LogInformation("Get all countries {@cont}", cont);
@@ -47,8 +49,8 @@ namespace HotelListing.Controllers
         [HttpGet("{id:int}")]
         public async Task<ActionResult<CountryDto>> GetCountry([FromRoute(Name = "id")] int Id)
         {
-
-            var country = await _context.Countries.Include(res => res.Hotels).FirstOrDefaultAsync(res => res.Id == Id);
+            var country = await _countryRepo.GetDetails(Id); 
+           
                 if (country == null)
             {
                 return NotFound();
@@ -70,10 +72,9 @@ namespace HotelListing.Controllers
             var newObj = _mapper.Map<Country>(CreateCountry);
             Console.WriteLine(newObj);
             _logger.LogInformation("Creating a new country {@NewCountry}", newObj);
-            
 
-            _context.Countries.Add(newObj);
-            await _context.SaveChangesAsync();
+
+            await _countryRepo.CreateAsync(newObj);
             _logger.LogInformation("Creating a country {@newObj}", newObj.Id);
             return CreatedAtAction(nameof(GetCountry), new { id = newObj.Id }, newObj);
 
@@ -85,17 +86,14 @@ namespace HotelListing.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult<Country>> DeleteCountry([FromRoute(Name = "id")] int Id)
         {
+            var country = await _countryRepo.GetAsync(Id);
 
-            var country = await _context.Countries.FindAsync(Id);
-            if (country != null)
+            if (country == null)
             {
-                _context.Countries.Remove(country);
-                await _context.SaveChangesAsync();
-
-                return Ok("Country deleted");
+                return NotFound();
             }
-
-            return NotFound();
+             await _countryRepo.DeleteAsync(Id);
+            return Ok();
         }
 
 
@@ -134,43 +132,46 @@ namespace HotelListing.Controllers
         //}
 
         [HttpPut("{id}") ]
-        public async Task<ActionResult<Country>> UpdateCountry(int id, [FromBody] UpdateCountryDto obj, CancellationToken ct)
+        public async Task<ActionResult<Country>> UpdateCountry(int id, [FromBody] UpdateCountryDto UpdateCountryDto, CancellationToken ct)
         {
-            if (id != obj.Id) return BadRequest("invalid Id");
+            //if (obj is not null) return BadRequest();
+            if (id != UpdateCountryDto.Id) return BadRequest("invalid Id");
 
             //change state to modified to prevent creating a new entity and just update the existing one
             //
             //var foundObj = await _context.Countries.FindAsync(id,ct);
             //_context.Entry(obj).State = EntityState.Modified;
             //when you get the entity from the db context it is already being tracked so you dont need to set the state to modified
-            var UpdateCountryDto = await _context.Countries.FindAsync(id, ct);
-            if (UpdateCountryDto is null) return NotFound("Does not exist");
-            _mapper.Map(obj, UpdateCountryDto);
+            //var UpdateCountryDto = await _context.Countries.FindAsync(id, ct);
+            var findObj = await _countryRepo.GetAsync(id);
+            if (findObj == null)
+            {
+                return NotFound();
+            }
             try
             {
-                await _context.SaveChangesAsync(ct);
-                
-                return Ok(UpdateCountryDto);
+                _mapper.Map(UpdateCountryDto, findObj);
+                await _countryRepo.UpdateAsync(findObj);
+                return (NoContent());
             }
             catch (DBConcurrencyException)
             {
 
-              return  await ContExist(id, ct) ? StatusCode(StatusCodes.Status409Conflict) : NotFound();
+                return await _countryRepo.Exists(id) ? StatusCode(StatusCodes.Status409Conflict) : NotFound();
+              
 
                
                 
             }
+        
             
             
         }
 
-        private Task<bool> ContExist(int id,CancellationToken? ct=null) => _context.Countries.AnyAsync(cont => cont.Id == id,ct?? CancellationToken.None);
+        //private Task<bool> ContExist(int id, CancellationToken? ct = null) => _context.Countries.AnyAsync(cont => cont.Id == id, ct ?? CancellationToken.None);
 
-        //private bool ContExist(int id)
-        //{
-        //    return (_context.Countries.Any(obj => obj.Id == id));
 
-        //}
+        private async Task<bool> ContExist(int id) => await _countryRepo.Exists(id);
 
 
     }

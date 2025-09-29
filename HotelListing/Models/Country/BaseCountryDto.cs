@@ -8,6 +8,6 @@ namespace HotelListing.Models.Country
 
         [Required]
         public string Name { get; set; }
-        string shortName { get; set; }
+        public string shortName { get; set; }
     }
 }

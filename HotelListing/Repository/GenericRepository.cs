@@ -44,17 +44,18 @@ namespace HotelListing.Repository
 
         {
             var entity = await _context.Set<T>().FindAsync(id);
-            if(entity is null) throw new Exception($"Entity of type {typeof(T).Name} with id {id} not found"); 
+            //if(entity is null) throw new Exception($"Entity of type {typeof(T).Name} with id {id} not found"); 
+            //if (entity is null) return null;
             return entity;
 
            
 
         }
-        public async Task <T?> UpdateAsync(int id, T Entity)
+        public async Task <T?> UpdateAsync( T Entity)
         {
-            if (Exists(id) is null) return null;
-         var obj=  await _context.Set<T>().FindAsync(id);
-            if (obj is null) return null;
+            //if (Exists(id) is null) return null;
+         //var obj=  await _context.Set<T>().FindAsync(id);
+         //   if (obj is null) return null;
             _context.Set<T>().Update(Entity);
             await _context.SaveChangesAsync();
             return Entity;
