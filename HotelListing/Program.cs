@@ -31,9 +31,9 @@ builder.Services.AddAutoMapper(cfg=>cfg.AddProfile<MapperConfig>() );
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 //builder.Services.AddScoped<IGenericRepository<Country>, GenericRepository<Country>>();
 
-//Add the type and implementation
+//Add the type/ interfacr and implementation of repository
 builder.Services.AddScoped<ICountryRepository, CountryRepository>();
-// With this line:
+builder.Services.AddScoped<IHotelRepository, HotelRepository>();
 
 var app = builder.Build();
 
