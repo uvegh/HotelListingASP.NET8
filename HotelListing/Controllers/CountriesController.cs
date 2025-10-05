@@ -36,7 +36,7 @@ namespace HotelListing.Controllers
             var countries = await _countryRepo.GetAllAsync();
             
                 var cont = _mapper.Map<List<GetCountryDto>>(countries);
-                _logger.LogInformation("Get all countries {@cont}", cont);
+                _logger.LogInformation("Get all countries {cont}", cont);
             
             
             if (cont != null) {
