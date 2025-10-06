@@ -8,6 +8,7 @@ namespace HotelListing.Contracts.User
     {
 
         Task <IEnumerable<IdentityError>> Signup(SignupDto signupDto);
-        Task<bool> Login(LoginDto loginDto);
+        Task<LoginResponseDto?> Login(LoginDto loginDto);
+        Task<string> AddJwt(ApiUser User);
     }
 }
