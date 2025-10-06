@@ -59,9 +59,9 @@ namespace HotelListing.Controllers
         {
             var res = await _authRepo.Login(loginDto);
 
-            if (res)
+            if (res!=null)
             {
-                return Ok("success");
+                return Ok(res);
             }
 
             return Unauthorized("invalid Login details");

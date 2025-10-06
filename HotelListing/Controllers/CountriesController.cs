@@ -67,7 +67,7 @@ namespace HotelListing.Controllers
         public async Task<ActionResult<Country>> PostCountry(CreateCountryDto CreateCountry)
         {
             
-            //create obj and map createCOuntry to country datatype
+           
 
             var newObj = _mapper.Map<Country>(CreateCountry);
             Console.WriteLine(newObj);
