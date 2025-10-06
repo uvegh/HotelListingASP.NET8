@@ -21,9 +21,6 @@ namespace HotelListing.Repository
             return country;
         }
 
-        //Task ICountryRepository.GetDetails(int id)
-        //{
-        //    return GetDetails(id);
-        //}
+        
     }
 }
