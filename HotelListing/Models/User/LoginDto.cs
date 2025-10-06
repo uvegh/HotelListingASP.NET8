@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using HotelListing.Data;
+using System.ComponentModel.DataAnnotations;
 
 namespace HotelListing.Models.User
 {
@@ -10,5 +11,11 @@ namespace HotelListing.Models.User
         [Required]
 
         public string Password { get; set; }
+    }
+
+    public class LoginResponseDto
+    {
+        public string Token { get; set;  }
+        public ApiUser User { get; set; }
     }
 }
