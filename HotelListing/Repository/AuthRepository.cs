@@ -27,23 +27,6 @@ namespace HotelListing.Repository
 
         }
 
-        //    public async Task<SignupResultDto> Signup(SignupDto signupDto)
-        //    {
-        //        var user = _mapper.Map<ApiUser>(signupDto);
-        //        user.UserName = signupDto.Email;
-        //        var res = await _userManager.CreateAsync(user, signupDto.Password);
-        //        _logger.LogInformation("signup response {@res}", res);
-        //        if (res.Succeeded)
-        //        {
-        //            await _userManager.AddToRoleAsync(user, "user");
-
-        //            return  new SignupResultDto { User=user};
-        //        }
-        //        return  new SignupResultDto { Errors=res.Errors};
-
-
-        //    }
-        //}
         
 
         public async Task<IEnumerable<IdentityError>> Signup(SignupDto signupDto)
@@ -73,10 +56,11 @@ namespace HotelListing.Repository
 
                 if (valid)
                 {
+                    var userUpt= _mapper.Map<UserResponseDto>(user);                
                     return new LoginResponseDto
                     {
-                        Token = await AddJwt(user),
-                        User = user
+                        Token = await GetToken(user),
+                        User = userUpt
 
                     };
                 }
@@ -92,7 +76,7 @@ namespace HotelListing.Repository
 
 
         }
-        public async Task<string> AddJwt(ApiUser user)
+        public async Task<string> GetToken(ApiUser user)
         {
             var roles = await _userManager.GetRolesAsync(user);
            
@@ -118,12 +102,14 @@ namespace HotelListing.Repository
                 issuer: _configuraton["JwtSettings:Issuer"],
                 audience: _configuraton["JwtSettings:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(Convert.ToInt32(_configuraton["JwtSettings:Duration"]))
+                expires: DateTime.Now.AddMinutes(Convert.ToInt32(_configuraton["JwtSettings:Duration"])),
+                signingCredentials: credentials
 
 
-                ).ToString();
+                );
+            _logger.LogInformation("not fomratted {@token} ", token);
 
-            return token;
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 

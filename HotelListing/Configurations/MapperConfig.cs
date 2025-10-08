@@ -23,6 +23,8 @@ namespace HotelListing.Configurations
             CreateMap<EditHotelDto, Hotel>().ReverseMap();
             CreateMap<CreateHotelDto, Hotel>().ReverseMap();
             CreateMap<SignupDto, ApiUser>().ReverseMap();
+            CreateMap<LoginResponseDto,ApiUser>().ReverseMap();  
+            CreateMap<UserResponseDto, ApiUser>().ReverseMap();                         
         }
     }
 }

@@ -9,6 +9,6 @@ namespace HotelListing.Contracts.User
 
         Task <IEnumerable<IdentityError>> Signup(SignupDto signupDto);
         Task<LoginResponseDto?> Login(LoginDto loginDto);
-        Task<string> AddJwt(ApiUser User);
+        Task<string> GetToken(ApiUser User);
     }
 }

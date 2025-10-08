@@ -58,7 +58,7 @@ namespace HotelListing.Controllers
             )
         {
             var res = await _authRepo.Login(loginDto);
-
+            Console.WriteLine(res);
             if (res!=null)
             {
                 return Ok(res);

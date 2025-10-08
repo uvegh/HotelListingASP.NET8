@@ -2,10 +2,9 @@
 using HotelListing.Contracts;
 using HotelListing.Data;
 using HotelListing.Models.Country;
-using HotelListing.Repository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-using Microsoft.EntityFrameworkCore;
 using System.Data;
 
 namespace HotelListing.Controllers
@@ -28,9 +27,10 @@ namespace HotelListing.Controllers
             _countryRepo = countryRepository;
 
         }
+       
 
         [HttpGet]
-
+        [Authorize]
         public async Task<ActionResult<IEnumerable<GetCountryDto>>> GetCountries(CancellationToken ct)
         {
             var countries = await _countryRepo.GetAllAsync();
