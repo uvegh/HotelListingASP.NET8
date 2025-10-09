@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace HotelListing.Models.User
 {
-    public class LoginDto
+    public class AuthDto
     {
         [Required]
         [EmailAddress]
@@ -17,9 +17,18 @@ namespace HotelListing.Models.User
 
     public class LoginResponseDto
     {
-        public string Token { get; set;  }
+        public string AccessToken { get; set;  }
+        public string RefreshToken { get; set; }
         public UserResponseDto User { get; set; }
     }
+
+    public class RefreshRequestDto 
+    {
+        public string RefreshToken { get; set; }
+
+
+    }
+
     public class UserResponseDto:ApiUser
     {
         [JsonIgnore]

@@ -15,4 +15,11 @@ namespace HotelListing.Models.User
         public string Email { get; set; }
 
     }
+
+    public class EmailDto
+    {
+        [EmailAddress]
+        public string Email { get; set; }
+
+    }
 }
