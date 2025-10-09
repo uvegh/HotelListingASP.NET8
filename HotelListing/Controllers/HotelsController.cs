@@ -2,6 +2,7 @@
 using HotelListing.Contracts;
 using HotelListing.Data;
 using HotelListing.Models.Hotel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Runtime.CompilerServices;
@@ -49,7 +50,7 @@ namespace HotelListing.Controllers
             return Ok(res);
 
         }
-
+        [Authorize (Roles ="Administrator")]
         [HttpPost]
 
         public async Task<ActionResult<HotelDto>> CreateHotel([FromBody] CreateHotelDto obj)

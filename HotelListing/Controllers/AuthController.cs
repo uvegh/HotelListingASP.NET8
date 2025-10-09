@@ -3,6 +3,7 @@ using HotelListing.Models.User;
 using HotelListing.Repository;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace HotelListing.Controllers
 {
@@ -42,7 +43,7 @@ namespace HotelListing.Controllers
 
             return Ok(signupDto);
 
-            
+
 
 
         }
@@ -54,12 +55,12 @@ namespace HotelListing.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status200OK)]
 
-        public async Task<ActionResult<bool>> Login([FromBody]LoginDto loginDto
+        public async Task<ActionResult<bool>> Login([FromBody] AuthDto loginDto
             )
         {
             var res = await _authRepo.Login(loginDto);
             Console.WriteLine(res);
-            if (res!=null)
+            if (res != null)
             {
                 return Ok(res);
             }
@@ -68,6 +69,33 @@ namespace HotelListing.Controllers
 
 
 
+        }
+
+        [HttpPost]
+        [Route("updateRole")]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        public async Task<ActionResult> UpdateUserRole([FromBodyAttribute] EmailDto email)
+        {
+            bool res = await _authRepo.UpdateUserRole(email);
+            if (!res) return StatusCode(StatusCodes.Status403Forbidden);
+            return Ok();
+
+        }
+
+        [HttpPost]
+        [Route("refresh")]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+
+        public async Task<ActionResult<LoginResponseDto>> GetRefreshTOken([FromBody] RefreshRequestDto refreshDto)
+        {
+            Console.WriteLine(refreshDto);
+            var res = await _authRepo.VerifyRefreshToken(refreshDto);
+            
+            if (res == null) return StatusCode(StatusCodes.Status403Forbidden);
+            return Ok(res);
         }
     }
 }

@@ -19,7 +19,9 @@ var connectString = builder.Configuration.GetConnectionString("DbConnectionStrin
 builder.Services.AddDbContext<HotelDBContext>(options =>
     options.UseSqlServer(connectString,
         b => b.MigrationsAssembly("HotelListing")));
-builder.Services.AddIdentityCore<ApiUser>().AddRoles<IdentityRole>().AddEntityFrameworkStores<HotelDBContext>();
+builder.Services.AddIdentityCore<ApiUser>().
+    AddTokenProvider<DataProtectorTokenProvider<ApiUser>>("HotelListing").
+    AddRoles<IdentityRole>().AddEntityFrameworkStores<HotelDBContext>();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
