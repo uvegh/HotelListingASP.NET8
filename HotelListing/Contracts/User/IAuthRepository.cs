@@ -1,6 +1,7 @@
 ﻿using HotelListing.Data;
 using HotelListing.Models.User;
 using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 
 namespace HotelListing.Contracts.User
 {
@@ -8,7 +9,10 @@ namespace HotelListing.Contracts.User
     {
 
         Task <IEnumerable<IdentityError>> Signup(SignupDto signupDto);
-        Task<LoginResponseDto?> Login(LoginDto loginDto);
-        Task<string> GetToken(ApiUser User);
+        Task<LoginResponseDto?> Login(AuthDto loginDto);
+        Task<string> GetAccessToken();
+        Task<bool> UpdateUserRole(EmailDto email);
+        Task<LoginResponseDto> VerifyRefreshToken(RefreshRequestDto refreshDto);
+        Task<string> GetRefreshToken();
     }
 }
