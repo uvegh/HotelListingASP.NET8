@@ -61,23 +61,32 @@ namespace HotelListing.Repository
             //generate new token
             var refreshToken = await _userManager.GenerateUserTokenAsync(_user, _loginProvider, _refreshToken);
             //setnewtoken
-            var res = await _userManager.SetAuthenticationTokenAsync(_user, _loginProvider, _refreshToken, refreshToken);
+             await _userManager.SetAuthenticationTokenAsync(_user, _loginProvider, _refreshToken, refreshToken);
             return refreshToken;
         }
         public async Task<LoginResponseDto?>VerifyRefreshToken(RefreshRequestDto refreshDto)
         {
-            _logger.LogDebug(" user obj {@refreshDto}", refreshDto);
+            //_logger.LogInformation(" this is token {@AccessToken}", refreshDto.AccessToken);
+            //read expired access token to get claims
             var jwtHandler = new JwtSecurityTokenHandler();
-            var userObj = jwtHandler.ReadJwtToken(refreshDto.RefreshToken);
-            _logger.LogDebug( "{@RefreshToken}, {@userObj}", refreshDto.RefreshToken, userObj);
-            //claims that were created awhen setting up accesstoken, retutn token type subject(Sub) value
+            var userObj = jwtHandler.ReadJwtToken(refreshDto.AccessToken);
+            //_logger.LogInformation(" this is user obj {@userObj}", userObj);
+
+            //claims that were created when setting up accesstoken, retutn token type subject(Sub) value
             var email = userObj.Claims.ToList().FirstOrDefault(res => res.Type == JwtRegisteredClaimNames.Sub)?.Value;
             //var id= userObj.Claims.ToList()
-            if (email != null) {
+            //_logger.LogInformation( "this is sub -{@email}", email);
+            if (email != null ) {
                
+                //get user with claim
             _user=    await _userManager.FindByNameAsync(email);
-                if (_user != null)
+                _logger.LogInformation("_user id before the if ==null statement {@Id}", _user.Id);
+                _logger.LogInformation("Id from request body id before the if ==null statement {@UserId}", refreshDto.UserId);
+                if (_user != null && _user.Id==refreshDto.UserId)
                 {
+                    _logger.LogInformation(" this is userId--{@UserId}", refreshDto.UserId);
+                    _logger.LogInformation("user info {@_user.Id}", _user.Id);
+                    _logger.LogInformation("user info after the if null statement {@_user}", _user);
                     //verify token,pass user, provider,tokentype,
                     var isRefreshValid=await _userManager.VerifyUserTokenAsync(_user,  _loginProvider,_refreshToken,refreshDto.RefreshToken);
                     if (isRefreshValid)
@@ -90,11 +99,14 @@ namespace HotelListing.Repository
                         };
 
                     }
-                    
+                    await _userManager.UpdateSecurityStampAsync(_user);
+                    return null;
                 }
+                return null;
             }
             return null;
         }
+
         public async Task<LoginResponseDto?> Login(AuthDto loginDto)
         {
             bool valid = false;
