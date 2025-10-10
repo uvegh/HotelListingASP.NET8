@@ -94,7 +94,7 @@ namespace HotelListing.Controllers
             Console.WriteLine(refreshDto);
             var res = await _authRepo.VerifyRefreshToken(refreshDto);
             
-            if (res == null) return StatusCode(StatusCodes.Status403Forbidden);
+            if (res == null) return StatusCode(StatusCodes.Status401Unauthorized);
             return Ok(res);
         }
     }
