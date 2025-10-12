@@ -1,6 +1,8 @@
 ﻿using HotelListing.Contracts.User;
+using HotelListing.Exceptions;
 using HotelListing.Models.User;
 using HotelListing.Repository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
@@ -14,12 +16,13 @@ namespace HotelListing.Controllers
 
     {
         private readonly IAuthRepository _authRepo;
+        private readonly ILogger _logger;
 
 
-
-        public AuthController(IAuthRepository authRepo)
+        public AuthController(IAuthRepository authRepo, ILogger<AuthController> logger)
         {
             _authRepo = authRepo;
+            _logger = logger;
 
         }
 
@@ -31,17 +34,28 @@ namespace HotelListing.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IdentityError>> Signup([FromBody] SignupDto signupDto)
         {
-            var res = await _authRepo.Signup(signupDto);
-            if (res.Any())
+            try
             {
-                foreach (var err in res)
+                var res = await _authRepo.Signup(signupDto);
+                if (res.Any())
                 {
-                    ModelState.AddModelError(err.Code, err.Description);
+                    foreach (var err in res)
+                    {
+                        ModelState.AddModelError(err.Code, err.Description);
+                    }
+                    return BadRequest(ModelState);
                 }
-                return BadRequest(ModelState);
-            }
 
-            return Ok(signupDto);
+                return Ok(signupDto);
+
+            }
+            catch (Exception )
+            {
+                _logger.LogDebug($" something went wrong in the {nameof(Signup)} controller");
+
+                return Problem($"Something went wrong in the {nameof(Signup)} controller");
+            }
+           
 
 
 
@@ -65,12 +79,12 @@ namespace HotelListing.Controllers
                 return Ok(res);
             }
 
-            return Unauthorized("invalid Login details");
+             throw  new UnAuthorizedException (nameof(Login));
 
 
 
         }
-
+        [Authorize]
         [HttpPost]
         [Route("updateRole")]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -87,7 +101,7 @@ namespace HotelListing.Controllers
         [Route("refresh")]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
 
         public async Task<ActionResult<LoginResponseDto>> GetRefreshTOken([FromBody] RefreshRequestDto refreshDto)
         {

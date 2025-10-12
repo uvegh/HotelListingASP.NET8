@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using HotelListing.Contracts;
 using HotelListing.Data;
+using HotelListing.Exceptions;
 using HotelListing.Models.Hotel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -45,7 +46,8 @@ namespace HotelListing.Controllers
         public async Task<ActionResult<HotelDto>> GetHotel([FromRoute] int id)
         {
             var hotel = await _hotelRepo.GetDetails(id);
-            if (hotel == null) return NotFound();
+            if (hotel == null) throw new  NotFoundException   (nameof(GetHotel), id);
+
             var res = _mapper.Map<HotelDto>(hotel);
             return Ok(res);
 
