@@ -61,7 +61,7 @@ namespace HotelListing.Controllers
 
         }
 
-
+        [Authorize]
 
         [HttpPost]
         public async Task<ActionResult<Country>> PostCountry(CreateCountryDto CreateCountry)
