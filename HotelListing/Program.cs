@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using HotelListing.Configurations;
 using HotelListing.Contracts;
 using HotelListing.Contracts.User;
@@ -66,6 +67,26 @@ builder.Services.AddAuthentication(option =>
         IssuerSigningKey= new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"]))
     };
 });
+
+
+//add versioning
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1);
+    options.ReportApiVersions = true;
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ApiVersionReader = ApiVersionReader.Combine(
+        new UrlSegmentApiVersionReader(),
+        new HeaderApiVersionReader("X-Api-Version"));
+    new MediaTypeApiVersionReader("ver");
+})
+.AddMvc() // This is needed for controllers
+.AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'V";
+    options.SubstituteApiVersionInUrl = true;
+});
+
 
 
 var app = builder.Build();

@@ -111,13 +111,14 @@ namespace HotelListing.Repository
         {
             bool valid = false;
              _user = await  _userManager.FindByEmailAsync(loginDto.Email);
-            Console.WriteLine(_user);
+            _logger.LogInformation("this is {_user}",_user);
             if (_user != null)
             {
             valid=  await   _userManager.CheckPasswordAsync(_user, loginDto.Password);
 
                 if (valid)
                 {
+                    _logger.LogInformation("Is user valid - {valid}",valid);
                     var userUpt= _mapper.Map<UserResponseDto>(_user);
                     return new LoginResponseDto
                     {
