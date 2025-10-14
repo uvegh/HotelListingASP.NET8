@@ -3,6 +3,7 @@ using HotelListing.Contracts;
 using HotelListing.Data;
 using HotelListing.Exceptions;
 using HotelListing.Models.Hotel;
+using HotelListing.Models.NewFolder;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -31,15 +32,16 @@ namespace HotelListing.Controllers
 
         [HttpGet]
 
-        public async Task<ActionResult<IEnumerable<HotelDto>>> GetHotels()
+        public async Task<ActionResult<IEnumerable<HotelDto>>> GetHotels([FromQuery] QueryParameters queryParams)
         {
-            var hotels = await _hotelRepo.GetAllAsync();
-            if (hotels == null) return NotFound();
-            var res = _mapper.Map<List<HotelDto>>(hotels);
+            var hotels = await _hotelRepo.GetAllPagedAsync<HotelDto>(queryParams);
+            if (hotels == null || hotels.Items.Count == 0) return NotFound();
 
-            return res;
+            return Ok(hotels);
 
         }
+
+        
 
         [HttpGet("{id:int}")]
 
