@@ -1,5 +1,4 @@
-﻿
-using HotelListing.Contracts.User;
+﻿using HotelListing.Contracts.User;
 using HotelListing.Exceptions;
 using HotelListing.Models.User;
 using HotelListing.Repository;
@@ -12,16 +11,15 @@ namespace HotelListing.Controllers
 {
 
     [ApiController]
-    [Route("hotelApi/v{version:apiVersion}/auth")]
-    [ApiVersion("2.0")]
-    public class AuthV2Controller : ControllerBase
+    [Route("hotelApi/[controller]")]
+    public class AuthController : ControllerBase
 
     {
         private readonly IAuthRepository _authRepo;
         private readonly ILogger _logger;
 
 
-        public AuthV2Controller(IAuthRepository authRepo, ILogger<AuthController> logger)
+        public AuthController(IAuthRepository authRepo, ILogger<AuthController> logger)
         {
             _authRepo = authRepo;
             _logger = logger;

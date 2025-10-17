@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using HotelListing.Contracts;
-using HotelListing.Core.Entities;
+using HotelListing.Data;
 using HotelListing.Exceptions;
 using HotelListing.Models.Hotel;
 using HotelListing.Models.NewFolder;

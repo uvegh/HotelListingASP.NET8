@@ -1,0 +1,75 @@
+﻿using HotelListing.Exceptions;
+using HotelListing.Models.Error;
+using Microsoft.AspNetCore.Http;
+
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using System.Net;
+
+namespace HotelListing.Middleware
+{
+    public class ExceptionMiddleware
+    {
+        public  RequestDelegate _next;
+        public ILogger <ExceptionMiddleware> _logger;        
+
+       
+        public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger) {
+            _next = next;
+            _logger = logger;
+        }
+
+       
+        public async Task InvokeAsync(HttpContext context)
+        {
+            //middleware hijacks every request and wraps it in a try catchblock
+            try
+            {
+
+                await _next(context);
+            }
+            catch(Exception err)
+            {
+                await HandleExceptions(context, err);
+                _logger.LogError("Something went wrong int the path :{Path}", context.Request.Path);
+            }
+        }
+
+        //create error response
+        private Task HandleExceptions(HttpContext context, Exception ex) {
+
+            //create a 500 internal server error response
+            context.Response.ContentType = "application/json";
+           
+            HttpStatusCode defaultStatusCode = HttpStatusCode.InternalServerError;
+//convert into json response
+            var errorDetails = new ErrorDetails
+            {
+                ErrorType = "Failure",
+                ErrorMessage = ex.Message
+
+            };
+
+            switch (ex)
+                //when its bad request exception type
+            {
+                // if exception is of type not found exception
+                case NotFoundException notFoundException:
+                    //create new statuscode of notfound insted of internal server error
+                    defaultStatusCode = HttpStatusCode.NotFound;
+                    errorDetails.ErrorType = "Not Found";
+                    break;
+                case UnAuthorizedException unauthorizedException:
+                    defaultStatusCode = HttpStatusCode.Unauthorized;
+                    errorDetails.ErrorType = "Unauthorized";
+                    break;
+            }
+
+            //convert details inst json string
+            string response = JsonConvert.SerializeObject(errorDetails);
+            context.Response.StatusCode = (int)defaultStatusCode;
+            return context.Response.WriteAsync(response);
+            
+        }
+    }
+}

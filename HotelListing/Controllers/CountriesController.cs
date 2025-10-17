@@ -1,10 +1,11 @@
 ﻿using AutoMapper;
 using HotelListing.Contracts;
+using HotelListing.Core.Entities;
 using HotelListing.Data;
 using HotelListing.Models.Country;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.AspNetCore.OData.Query;
 using System.Data;
 
 namespace HotelListing.Controllers
@@ -30,7 +31,7 @@ namespace HotelListing.Controllers
        
 
         [HttpGet]
-        [Authorize]
+        [EnableQuery]
         public async Task<ActionResult<IEnumerable<GetCountryDto>>> GetCountries(CancellationToken ct)
         {
             var countries = await _countryRepo.GetAllAsync();

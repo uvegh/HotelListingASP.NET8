@@ -1,12 +1,17 @@
-using Asp.Versioning;
+
+
 using HotelListing.Configurations;
 using HotelListing.Contracts;
 using HotelListing.Contracts.User;
 using HotelListing.Data;
+using HotelListing.Data.Entities;
 using HotelListing.Middleware;
 using HotelListing.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Versioning;
+using Microsoft.AspNetCore.OData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
@@ -24,7 +29,7 @@ builder.Services.AddDbContext<HotelDBContext>(options =>
 builder.Services.AddIdentityCore<ApiUser>().
     AddTokenProvider<DataProtectorTokenProvider<ApiUser>>("HotelListing").
     AddRoles<IdentityRole>().AddEntityFrameworkStores<HotelDBContext>();
-builder.Services.AddControllers();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -48,6 +53,7 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 builder.Services.AddScoped<ICountryRepository, CountryRepository>();
 builder.Services.AddScoped<IHotelRepository, HotelRepository>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+
 builder.Services.AddAuthentication(option =>
 {
     option.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;// this is "bearer"
@@ -70,21 +76,46 @@ builder.Services.AddAuthentication(option =>
 
 
 //add versioning
+//builder.Services.AddApiVersioning(options =>
+//{
+//    options.DefaultApiVersion = new ApiVersion (1,0);
+//    options.ReportApiVersions = true;
+//    options.AssumeDefaultVersionWhenUnspecified = true;
+//    options.ApiVersionReader = ApiVersionReader.Combine(
+//        new UrlSegmentApiVersionReader(),
+//        new HeaderApiVersionReader("X-Api-Version"));
+//    new MediaTypeApiVersionReader("ver");
+//})
+//.AddMvc() // This is needed for controllers
+//.AddApiExplorer(options =>
+//{
+//    options.GroupNameFormat = "'v'V";
+//    options.SubstituteApiVersionInUrl = true;
+//});
+
+
+// Add API Versioning
 builder.Services.AddApiVersioning(options =>
 {
-    options.DefaultApiVersion = new ApiVersion(1);
-    options.ReportApiVersions = true;
     options.AssumeDefaultVersionWhenUnspecified = true;
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.ReportApiVersions = true;
     options.ApiVersionReader = ApiVersionReader.Combine(
-        new UrlSegmentApiVersionReader(),
-        new HeaderApiVersionReader("X-Api-Version"));
-    new MediaTypeApiVersionReader("ver");
-})
-.AddMvc() // This is needed for controllers
-.AddApiExplorer(options =>
+        new QueryStringApiVersionReader("api-version"),
+        new HeaderApiVersionReader("x-api-version")
+    );
+});
+
+// Add Versioned API Explorer (for Swagger)
+builder.Services.AddVersionedApiExplorer(options =>
 {
-    options.GroupNameFormat = "'v'V";
+    options.GroupNameFormat = "'v'VVV"; // e.g. v1, v1.0
     options.SubstituteApiVersionInUrl = true;
+});
+
+builder.Services.AddControllers().AddOData(options =>
+{
+    options.Select().Filter().OrderBy();
 });
 
 

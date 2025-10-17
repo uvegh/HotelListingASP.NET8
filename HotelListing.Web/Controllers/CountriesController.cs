@@ -1,22 +1,17 @@
-﻿
-using AutoMapper;
+﻿using AutoMapper;
 using HotelListing.Contracts;
+using HotelListing.Data;
 using HotelListing.Models.Country;
-using HotelListing.Models.NewFolder;
-using HotelListing.Models.Pagination;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Data;
-using HotelListing.Exceptions;
 using Microsoft.AspNetCore.OData.Query;
-using HotelListing.Core.Entities;
-using HotelListing.Data;
+using System.Data;
+
 namespace HotelListing.Controllers
 {
     [ApiController]
-    [Route("hotelApi/v{version:apiVersion}/countries")]
-    [ApiVersion("2.0")]
-    public class CountriesV2Controller : ControllerBase
+    [Route("hotelApi/[controller]")]
+    public class CountriesController : ControllerBase
     {
         //private readonly HotelDBContext _context;
         private readonly ILogger<CountriesController> _logger;
@@ -24,7 +19,7 @@ namespace HotelListing.Controllers
         private readonly ICountryRepository _countryRepo;
         
 
-        public CountriesV2Controller(HotelDBContext context,ILogger<CountriesController> logger, IMapper mapper, ICountryRepository countryRepository)
+        public CountriesController(HotelDBContext context,ILogger<CountriesController> logger, IMapper mapper, ICountryRepository countryRepository)
         {
             //_context = context;
             _logger = logger;
@@ -32,53 +27,24 @@ namespace HotelListing.Controllers
             _countryRepo = countryRepository;
 
         }
-
-
-        // [HttpGet]
-        //[Authorize]
-        //public async Task<ActionResult<IEnumerable<GetCountryDto>>> GetCountries(CancellationToken ct)
-        //{
-        //    var countries = await _countryRepo.GetAllAsync();
-
-        //        var cont = _mapper.Map<List<GetCountryDto>>(countries);
-        //        _logger.LogInformation("Get all countries {cont}", cont);
-
-
-        //    if (cont != null) {
-
-        //        return Ok(cont);
-        //    }
-        //    return NotFound();
-        //}
-
-
-        //hotelApi/v2/countries?StartIndex=5&PageNumber=1
        
+
         [HttpGet]
         [EnableQuery]
-        public async Task<ActionResult<PageResult<GetCountryDto> >> GetCountries([FromQuery] QueryParameters queryParams)
+        public async Task<ActionResult<IEnumerable<GetCountryDto>>> GetCountries(CancellationToken ct)
         {
+            var countries = await _countryRepo.GetAllAsync();
+            
+                var cont = _mapper.Map<List<GetCountryDto>>(countries);
+                _logger.LogInformation("Get all countries {cont}", cont);
+            
+            
+            if (cont != null) {
 
-            var countries = await _countryRepo.GetAllPagedAsync<GetCountryDto>(queryParams);
-            if(countries== null || countries.Items.Count ==0)
-            {
-                throw new NotFoundException (nameof(GetCountries),$"page {queryParams}"); 
+                return Ok(cont);
             }
-            return Ok(countries);
+            return NotFound();
         }
-
-
-        [EnableQuery]
-        [HttpGet("filter")]
-        public IQueryable<GetCountryDto> GetCountriesOData()
-        {
-            return _countryRepo.GetFilteredOData<GetCountryDto>();
-
-
-                }
-
-
-
 
         [HttpGet("{id:int}")]
         public async Task<ActionResult<CountryDto>> GetCountry([FromRoute(Name = "id")] int Id)

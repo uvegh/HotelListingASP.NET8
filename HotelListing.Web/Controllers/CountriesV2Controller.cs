@@ -1,6 +1,7 @@
-﻿
+﻿using Asp.Versioning;
 using AutoMapper;
 using HotelListing.Contracts;
+using HotelListing.Data;
 using HotelListing.Models.Country;
 using HotelListing.Models.NewFolder;
 using HotelListing.Models.Pagination;
@@ -9,8 +10,6 @@ using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using HotelListing.Exceptions;
 using Microsoft.AspNetCore.OData.Query;
-using HotelListing.Core.Entities;
-using HotelListing.Data;
 namespace HotelListing.Controllers
 {
     [ApiController]
