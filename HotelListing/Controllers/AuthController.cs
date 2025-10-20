@@ -9,7 +9,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace HotelListing.Controllers
 {
-
+    [ApiVersion("1.0",Deprecated =true)]
     [ApiController]
     [Route("hotelApi/[controller]")]
     public class AuthController : ControllerBase

@@ -28,8 +28,8 @@ namespace HotelListing.Controllers
             _countryRepo = countryRepository;
 
         }
-       
 
+        [Authorize]
         [HttpGet]
         [EnableQuery]
         public async Task<ActionResult<IEnumerable<GetCountryDto>>> GetCountries(CancellationToken ct)
@@ -62,28 +62,24 @@ namespace HotelListing.Controllers
 
         }
 
+
+
         [Authorize]
-
         [HttpPost]
-        public async Task<ActionResult<Country>> PostCountry(CreateCountryDto CreateCountry)
+        public async Task<ActionResult<CountryDto>> CreateCountry(CreateCountryDto createCountryDto)
         {
+            var country = await _countryRepo.CreateMapAsync<CreateCountryDto, Country>(createCountryDto);
             
-           
-
-            var newObj = _mapper.Map<Country>(CreateCountry);
-            Console.WriteLine(newObj);
-            _logger.LogInformation("Creating a new country {@NewCountry}", newObj);
-
-
-            await _countryRepo.CreateAsync(newObj);
-            _logger.LogInformation("Creating a country {@newObj}", newObj.Id);
-            return CreatedAtAction(nameof(GetCountry), new { id = newObj.Id }, newObj);
-
+            if(country != null)
+            {
+                return CreatedAtAction(nameof(GetCountry), new { id = country.Id }, country);
+            }
+            throw new Exception("Creating country failed on save");
 
         }
 
 
-
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<ActionResult<Country>> DeleteCountry([FromRoute(Name = "id")] int Id)
         {
@@ -132,6 +128,7 @@ namespace HotelListing.Controllers
 
         //}
 
+        [Authorize]
         [HttpPut("{id}") ]
         public async Task<ActionResult<Country>> UpdateCountry(int id, [FromBody] UpdateCountryDto UpdateCountryDto, CancellationToken ct)
         {
@@ -172,7 +169,6 @@ namespace HotelListing.Controllers
         //private Task<bool> ContExist(int id, CancellationToken? ct = null) => _context.Countries.AnyAsync(cont => cont.Id == id, ct ?? CancellationToken.None);
 
 
-        private async Task<bool> ContExist(int id) => await _countryRepo.Exists(id);
 
 
     }

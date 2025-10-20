@@ -3,17 +3,19 @@
 using HotelListing.Configurations;
 using HotelListing.Contracts;
 using HotelListing.Contracts.User;
+using HotelListing.Core.Middleware;
 using HotelListing.Data;
 using HotelListing.Data.Entities;
-using HotelListing.Middleware;
 using HotelListing.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.AspNetCore.OData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Serilog;
 using System.Text;
 
@@ -32,7 +34,39 @@ builder.Services.AddIdentityCore<ApiUser>().
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "HotelListingApi" });
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = @"JWT Authorixation header using the Bearer scheme [space]
+Enter Bearer  and Token in the text input below.
+Example: Bearer 23434234423asdwe ",
+        Name="Authorization",
+        In= ParameterLocation.Header,
+        Type= SecuritySchemeType.ApiKey,
+        Scheme="Bearer"
+
+    });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+         new OpenApiSecurityScheme
+         {
+             Reference= new OpenApiReference
+             {
+                 Type=ReferenceType.SecurityScheme,
+                 Id="Bearer"
+             },
+             Scheme="0auth2",
+             Name="Bearer",
+             In=ParameterLocation.Header
+         },
+         new List <string>()
+        }
+    });
+});
+
 
 builder.Services.AddCors(options =>
 {
@@ -75,23 +109,9 @@ builder.Services.AddAuthentication(option =>
 });
 
 
-//add versioning
-//builder.Services.AddApiVersioning(options =>
-//{
-//    options.DefaultApiVersion = new ApiVersion (1,0);
-//    options.ReportApiVersions = true;
-//    options.AssumeDefaultVersionWhenUnspecified = true;
-//    options.ApiVersionReader = ApiVersionReader.Combine(
-//        new UrlSegmentApiVersionReader(),
-//        new HeaderApiVersionReader("X-Api-Version"));
-//    new MediaTypeApiVersionReader("ver");
-//})
-//.AddMvc() // This is needed for controllers
-//.AddApiExplorer(options =>
-//{
-//    options.GroupNameFormat = "'v'V";
-//    options.SubstituteApiVersionInUrl = true;
-//});
+
+
+
 
 
 // Add API Versioning
@@ -119,6 +139,11 @@ builder.Services.AddControllers().AddOData(options =>
 });
 
 
+builder.Services.AddOutputCache(opt =>
+{ opt.AddBasePolicy(builder =>
+builder.Expire(TimeSpan.FromSeconds(60)).SetVaryByQuery("PageNumber", "PageSize").Cache());
+
+});
 
 var app = builder.Build();
 
@@ -126,9 +151,21 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(
+        options =>
+        {
+            var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+            //map through versions in swagger 
+            foreach (var description in provider.ApiVersionDescriptions)
+            {
+                options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json",
+                    $"HotelListing API {description.GroupName.ToUpper()}");
+            }
+            options.RoutePrefix = "swagger";
+        });
 }
 app.UseMiddleware<ExceptionMiddleware>();
+app.UseOutputCache();
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthentication();

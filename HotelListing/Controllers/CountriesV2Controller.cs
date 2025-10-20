@@ -11,6 +11,7 @@ using HotelListing.Exceptions;
 using Microsoft.AspNetCore.OData.Query;
 using HotelListing.Core.Entities;
 using HotelListing.Data;
+using Microsoft.AspNetCore.OutputCaching;
 namespace HotelListing.Controllers
 {
     [ApiController]
@@ -34,28 +35,13 @@ namespace HotelListing.Controllers
         }
 
 
-        // [HttpGet]
-        //[Authorize]
-        //public async Task<ActionResult<IEnumerable<GetCountryDto>>> GetCountries(CancellationToken ct)
-        //{
-        //    var countries = await _countryRepo.GetAllAsync();
-
-        //        var cont = _mapper.Map<List<GetCountryDto>>(countries);
-        //        _logger.LogInformation("Get all countries {cont}", cont);
-
-
-        //    if (cont != null) {
-
-        //        return Ok(cont);
-        //    }
-        //    return NotFound();
-        //}
 
 
         //hotelApi/v2/countries?StartIndex=5&PageNumber=1
        
         [HttpGet]
         [EnableQuery]
+        [OutputCache(Duration =60,VaryByQueryKeys = new[] { "PageNumber","PageSize"})]
         public async Task<ActionResult<PageResult<GetCountryDto> >> GetCountries([FromQuery] QueryParameters queryParams)
         {
 
@@ -79,7 +65,7 @@ namespace HotelListing.Controllers
 
 
 
-
+        [Authorize]
         [HttpGet("{id:int}")]
         public async Task<ActionResult<CountryDto>> GetCountry([FromRoute(Name = "id")] int Id)
         {
@@ -116,7 +102,7 @@ namespace HotelListing.Controllers
         }
 
 
-
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<ActionResult<Country>> DeleteCountry([FromRoute(Name = "id")] int Id)
         {
@@ -166,7 +152,7 @@ namespace HotelListing.Controllers
         //}
 
         [HttpPut("{id}") ]
-        public async Task<ActionResult<Country>> UpdateCountry(int id, [FromBody] UpdateCountryDto UpdateCountryDto, CancellationToken ct)
+        public async Task<ActionResult<CountryDto>> UpdateCountry(int id, [FromBody] UpdateCountryDto UpdateCountryDto, CancellationToken ct)
         {
             //if (obj is not null) return BadRequest();
             if (id != UpdateCountryDto.Id) return BadRequest("invalid Id");
@@ -177,16 +163,19 @@ namespace HotelListing.Controllers
             //_context.Entry(obj).State = EntityState.Modified;
             //when you get the entity from the db context it is already being tracked so you dont need to set the state to modified
             //var UpdateCountryDto = await _context.Countries.FindAsync(id, ct);
-            var findObj = await _countryRepo.GetAsync(id);
-            if (findObj == null)
-            {
-                return NotFound();
-            }
+            //var findObj = await _countryRepo.GetAsync(id);
+            //if (findObj == null)
+            //{
+            //    throw new NotFoundException("Does not exist", id);
+            //}
             try
             {
-                _mapper.Map(UpdateCountryDto, findObj);
-                await _countryRepo.UpdateAsync(findObj);
-                return (NoContent());
+                var update = await _countryRepo.UpdateAsyncMap<UpdateCountryDto, Country>(id, UpdateCountryDto);
+                if(update is null)
+                {
+                    throw new NotFoundException(nameof(UpdateCountry), UpdateCountryDto.Id);
+                }
+                return Ok(update);
             }
             catch (DBConcurrencyException)
             {
@@ -201,8 +190,6 @@ namespace HotelListing.Controllers
             
             
         }
-
-        //private Task<bool> ContExist(int id, CancellationToken? ct = null) => _context.Countries.AnyAsync(cont => cont.Id == id, ct ?? CancellationToken.None);
 
 
         private async Task<bool> ContExist(int id) => await _countryRepo.Exists(id);
