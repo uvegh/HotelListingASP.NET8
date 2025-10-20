@@ -1,12 +1,12 @@
 ﻿using HotelListing.Exceptions;
 using HotelListing.Models.Error;
 using Microsoft.AspNetCore.Http;
-
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Net;
 
-namespace HotelListing.Middleware
+namespace HotelListing.Core.Middleware
 {
     public class ExceptionMiddleware
     {
@@ -65,11 +65,46 @@ namespace HotelListing.Middleware
                     break;
             }
 
+            var problemDetails = new ProblemDetails
+            {
+                Type = $"https://httpstatuses.com/{defaultStatusCode}",
+                Title = GetDefaultTitleForStatusCode(defaultStatusCode),
+                Status = (int)defaultStatusCode,
+                Detail = ex.Message,
+                Instance = context.Request.Path
+
+            };
+
+           
+
             //convert details inst json string
-            string response = JsonConvert.SerializeObject(errorDetails);
+            //string response = JsonConvert.SerializeObject(errorDetails);
+            string response = JsonConvert.SerializeObject(problemDetails);
             context.Response.StatusCode = (int)defaultStatusCode;
             return context.Response.WriteAsync(response);
             
+        }
+                    // Fix for CS8070, CS0723, CS1003, CS1002, CS1513
+        // Replace the GetDefaultTitleForStatusCode method with correct switch syntax and parameter type
+        private static string GetDefaultTitleForStatusCode(HttpStatusCode code)
+        {
+            switch (code)
+            {
+                case HttpStatusCode.BadRequest:
+                    return "Bad request";
+
+                case HttpStatusCode.Unauthorized:
+                    return "Unauthorized";
+
+                case HttpStatusCode.Forbidden:
+                    return "Forbidden";
+
+                case HttpStatusCode.InternalServerError:
+                    return "Internal Server Error";
+
+                default:
+                    return "err";
+            }
         }
     }
 }
