@@ -47,7 +47,7 @@ jobs:
       run: |
             dotnet build ${{ env.WORKING_DIRECTORY }} --configuration ${{ env.CONFIGURATION }}
             dotnet run --project ${{ env.WORKING_DIRECTORY }} --configuration ${{ env.CONFIGURATION }} &
-            sleep 10 curl https://localhost:5001/swagger/v1/swagger.json -o "${{ env.API_IMPORT_SPECIFICATION_PATH }}" --insecure
+            sleep 10 curl https://localhost:5001/swagger/v1/swagger.json --output "${{ env.API_IMPORT_SPECIFICATION_PATH }}" --insecure
 
     - name: Publish Artifacts
       uses: actions/upload-artifact@v4
