@@ -45,9 +45,10 @@ jobs:
       working-directory: ${{ env.WORKING_DIRECTORY }}
     - name: Generate Open API Specification Document (Minimal API Compatible)
       run: |
-            dotnet build ${{ env.WORKING_DIRECTORY }} --configuration ${{ env.CONFIGURATION }}
-            dotnet run --project ${{ env.WORKING_DIRECTORY }} --configuration ${{ env.CONFIGURATION }} &
-            Start-Sleep -Seconds  10 curl https://localhost:5001/swagger/v1/swagger.json --output "${{ env.API_IMPORT_SPECIFICATION_PATH }}" --insecure
+            dotnet build $env:WORKING_DIRECTORY --configuration $env:CONFIGURATION
+            dotnet run --project $env:WORKING_DIRECTORY --configuration $env:CONFIGURATION &
+            Start-Sleep -Seconds 10
+            curl https://localhost:5001/swagger/v1/swagger.json --output "$env:API_IMPORT_SPECIFICATION_PATH" --insecure
 
     - name: Publish Artifacts
       uses: actions/upload-artifact@v4
