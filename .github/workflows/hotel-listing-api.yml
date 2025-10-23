@@ -11,7 +11,7 @@ env:
   AZURE_APIM_SERVICENAME: HotelListingapi-2
   AZURE_APIM_API_ID: HotelListing
   AZURE_APIM_APPSERVICEURL: https://hotel-listing-api-hrggexf4bcakcuex.canadacentral-01.azurewebsites.net
-  SWASHBUCLE_ASPNET_CORE_CLI_PACKAGE_VERSION: 5.6.3
+  SWASHBUCLE_ASPNET_CORE_CLI_PACKAGE_VERSION: 6.6.2
   SWASHBUCKLE_DOTNET_CORE_VERSION: 3.1.x
   API_IMPORT_SPECIFICATION_PATH: HotelListing\publish\swagger.json
   API_IMPORT_DLL: HotelListing\bin\Release\net8.0\HotelListing.dll
