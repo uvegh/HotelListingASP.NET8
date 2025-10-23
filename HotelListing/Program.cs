@@ -27,7 +27,7 @@ var connectString = builder.Configuration.GetConnectionString("DbConnectionStrin
 
 builder.Services.AddDbContext<HotelDBContext>(options =>
     options.UseSqlServer(connectString,
-        b => b.MigrationsAssembly("HotelListing")));
+        b => b.MigrationsAssembly("HotelListing.Data")));
 builder.Services.AddIdentityCore<ApiUser>().
     AddTokenProvider<DataProtectorTokenProvider<ApiUser>>("HotelListing").
     AddRoles<IdentityRole>().AddEntityFrameworkStores<HotelDBContext>();
